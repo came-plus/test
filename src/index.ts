@@ -629,7 +629,7 @@ Set logFile = fso.OpenTextFile("${serviceDir.replace(/\\/g, "\\\\")}\\service.lo
 logFile.WriteLine(Date & " " & Time & " - Service wrapper script starting")
 
 ' Set the command to run Node.js
-nodeCommand = "${nodePath.replace(/\\/g, "\\\\")}" & " " & "${__filename.replace(/\\/g, "\\\\")}${serviceParams}"
+nodeCommand = "${nodePath.replace(/\\/g, "\\\\")}" & " " & Chr(34) & "${__filename.replace(/\\/g, "\\\\")}" & Chr(34) & " " & "${serviceParams}"
 logFile.WriteLine("Command: " & nodeCommand)
 
 ' Create shell object
