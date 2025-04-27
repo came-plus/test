@@ -9,23 +9,28 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        # Checks out the repository code to the runner
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20' # Node.js 20 LTS
           registry-url: 'https://registry.npmjs.org' # Default registry for npm
+        # Sets up Node.js environment for the workflow
 
       - name: Install dependencies
         run: npm ci
+        # Installs dependencies using npm ci for a clean install
 
       - name: Build project
         run: npm run build
+        # Builds the project using the build script defined in package.json
 
       - name: Publish to npm
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} # Authentication for npm
+        # Publishes the package to npm using the token stored in GitHub secrets
 
       - name: Extract version from package.json
         run: |
@@ -40,13 +45,17 @@ jobs:
           git push origin :refs/tags/${{ env.VERSION }} || true
         # Deletes the tag locally and remotely, ignores errors if not present
 
-      - name: Create GitHub Release and Upload Asset
-        uses: softprops/action-gh-release@v1
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.VERSION }} # e.g., 0.0.11
-          name: ${{ env.VERSION }} # e.g., 0.0.11
+          tag_name: ${{ env.VERSION }}
+          release_name: ${{ env.VERSION }}
           draft: false
           prerelease: false
+        # Creates a new release on GitHub with the version from package.json
 
       - name: npm pack
         run: npm pack # Creates a .tgz file from the package.json
@@ -61,8 +70,10 @@ jobs:
           asset_path: ./came.plus-test-${{ env.VERSION }}.tgz # Path to the .tgz file
           asset_name: came.plus-test-${{ env.VERSION }}.tgz # Name of the asset in the release
           asset_content_type: application/gzip # Content type for .tgz files
+        # Uploads the .tgz file created by npm pack to the GitHub release
 
       - name: List all files
         run: |
           echo "Listing all files in the current directory: $(pwd)"
           ls -R
+        # Lists all files in the current directory
