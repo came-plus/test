@@ -1,6 +1,6 @@
 {
   "name": "@came.plus/test",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "https://came.plus/test: Simple CAME+ testing framework",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
