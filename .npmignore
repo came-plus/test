@@ -1,0 +1,13 @@
+# Ignore GitHub specific files and directories
+.github/
+.git/
+.gitignore
+
+# Other files typically ignored for npm packages
+node_modules/
+tests/
+*.test.js
+*.spec.js
+.travis.yml
+.editorconfig
+.eslintrc

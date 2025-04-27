@@ -1,0 +1,68 @@
+name: Publish to npm and Create GitHub Release
+
+on:
+  workflow_dispatch: # Manual trigger via GitHub UI or API
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20' # Node.js 20 LTS
+          registry-url: 'https://registry.npmjs.org' # Default registry for npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} # Authentication for npm
+
+      - name: Extract version from package.json
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "Extracted version: $VERSION" # Debugging output
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+        # Extracts the version from package.json and sets it in the environment
+
+      - name: Delete existing tag if present
+        run: |
+          git tag -d ${{ env.VERSION }} || true
+          git push origin :refs/tags/${{ env.VERSION }} || true
+        # Deletes the tag locally and remotely, ignores errors if not present
+
+      - name: Create GitHub Release and Upload Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.VERSION }} # e.g., 0.0.11
+          name: ${{ env.VERSION }} # e.g., 0.0.11
+          draft: false
+          prerelease: false
+
+      - name: npm pack
+        run: npm pack # Creates a .tgz file from the package.json
+        # This will create a file named came.plus-test-<version>.tgz in the current directory 
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Use default GITHUB_TOKEN with updated permissions
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # URL from create-release step
+          asset_path: ./came.plus-test-${{ env.VERSION }}.tgz # Path to the .tgz file
+          asset_name: came.plus-test-${{ env.VERSION }}.tgz # Name of the asset in the release
+          asset_content_type: application/gzip # Content type for .tgz files
+
+      - name: List all files
+        run: |
+          echo "Listing all files in the current directory: $(pwd)"
+          ls -R

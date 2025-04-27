@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+      "target": "ESNext",                    // Ziel-ECMAScript-Version (modernste Features)
+      "module": "ESNext",                    // Modulsystem für moderne JS-Module
+      "outDir": "./dist",                    // Ausgabeverzeichnis für kompilierte Dateien
+      "rootDir": "./src",                    // Quelldateien-Verzeichnis
+      "strict": true,                        // Aktiviert strenge Typprüfung
+      "esModuleInterop": true,               // Ermöglicht Interoperabilität mit CommonJS-Modulen
+      "skipLibCheck": true,                  // Überspringt Typprüfung von Bibliotheksdateien
+      "forceConsistentCasingInFileNames": true, // Erzwingt konsistente Groß-/Kleinschreibung
+      "moduleResolution": "node",            // Verwendet Node.js-Modulauflösung
+      "declaration": true,                    // Generiert .d.ts-Typendeklarationsdateien
+      "resolveJsonModule": true               // Added to allow JSON imports
+    },
+    "include": ["src/**/*"],                 // Inkludiert alle Dateien im src-Verzeichnis
+    "exclude": ["node_modules", "dist"]      // Exkludiert node_modules und dist
+  }
