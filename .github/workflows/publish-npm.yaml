@@ -45,32 +45,21 @@ jobs:
           git push origin :refs/tags/${{ env.VERSION }} || true
         # Deletes the tag locally and remotely, ignores errors if not present
 
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.VERSION }}
-          release_name: ${{ env.VERSION }}
-          draft: false
-          prerelease: false
-        # Creates a new release on GitHub with the version from package.json
-
       - name: npm pack
         run: npm pack # Creates a .tgz file from the package.json
-        # This will create a file named came.plus-test-<version>.tgz in the current directory 
+        # Creates a file named came.plus-test-<version>.tgz in the current directory 
 
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
+      - name: Create GitHub Release and Upload Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          draft: false
+          prerelease: false
+          files: ./came.plus-test-${{ env.VERSION }}.tgz # Path to the renamed .tgz file
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Use default GITHUB_TOKEN with updated permissions
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # URL from create-release step
-          asset_path: ./came.plus-test-${{ env.VERSION }}.tgz # Path to the .tgz file
-          asset_name: came.plus-test-${{ env.VERSION }}.tgz # Name of the asset in the release
-          asset_content_type: application/gzip # Content type for .tgz files
-        # Uploads the .tgz file created by npm pack to the GitHub release
+        # Creates a GitHub release with the specified tag and uploads the packed .tgz file as an additional asset
 
       - name: List all files
         run: |
