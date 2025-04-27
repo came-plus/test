@@ -41,22 +41,30 @@ npx "@came.plus/test" install --bind=127.0.0.1
 
 # Install as a service with IPv6 support
 npx "@came.plus/test" install --ipv6
+
+# Uninstall/remove the service
+npx "@came.plus/test" uninstall
 ```
 
-> **Note:** Installing as a system service requires administrator privileges on Windows or root privileges on Linux/macOS.
+> **Note:** Installing and uninstalling services requires administrator privileges on Windows or root privileges on Linux/macOS.
 
 ### On Windows
 
 The installation process will:
-1. Create a Windows service named "CAME+Test"
+1. Create a Windows service "came-plus-test" named "CAME+Test"
 2. Configure it to start automatically at system boot
 3. Launch the service immediately
 
 If you have NSSM (Non-Sucking Service Manager) installed, it will be used for better service management. Otherwise, the native Windows Service Controller (sc.exe) will be used.
 
+Uninstallation will:
+1. Stop the running service
+2. Remove the service from the system
+3. Clean up service-related files
+
 ### On Linux and macOS
 
-Support for automatic service installation on Linux and macOS is coming soon. For now, you can manually create:
+Support for automatic service installation and uninstallation on Linux and macOS is coming soon. For now, you can manually create:
 - A systemd service on Linux
 - A launchd service on macOS
 
