@@ -27,5 +27,7 @@ npx "@came.plus/test" install
 Add to your TypeScript project:
 
 ```bash
-npm install @came.plus/test
+npm install "@came.plus/test"
+# or:
+npm i @came.plus/test
 ```
