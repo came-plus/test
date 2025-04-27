@@ -423,41 +423,73 @@ function installWindowsService(port: number, bind: string, ipv6: boolean): void 
     // Check if nssm is available (Service Manager for Windows)
     try {
       execSync('where nssm', { stdio: 'ignore' });
+      
+      // If nssm is available, use it (it's more feature-rich)
+      console.log('Using NSSM to install service...');
+      execSync(`nssm install ${serviceName} ${serviceCommand}`, { stdio: 'inherit' });
+      execSync(`nssm set ${serviceName} DisplayName "${serviceDisplayName}"`, { stdio: 'inherit' });
+      execSync(`nssm set ${serviceName} Description "${serviceDescription}"`, { stdio: 'inherit' });
+      execSync(`nssm set ${serviceName} Start SERVICE_AUTO_START`, { stdio: 'inherit' });
+      console.log(`Service ${serviceDisplayName} installed successfully.`);
+      console.log('Starting service...');
+      execSync(`nssm start ${serviceName}`, { stdio: 'inherit' });
+      console.log('Service started successfully.');
+      
     } catch {
       console.log('NSSM (Non-Sucking Service Manager) is not found. Installing service using Windows SC command...');
       
-      // Create a batch file for the service
-      const batchFilePath = join(process.env.ProgramData || 'C:\\ProgramData', 'came-plus-test', 'start_service.bat');
+      // For native Windows service, we need to create a Windows-service compatible executable
+      // Create a directory for the service files
+      const serviceDir = join(process.env.ProgramData || 'C:\\ProgramData', 'came-plus-test');
+      mkdirSync(serviceDir, { recursive: true });
+      
+      // Create a more robust batch file that handles Windows service requirements
+      const batchFilePath = join(serviceDir, 'start_service.bat');
+      
+      // Generate a proper Windows service batch file
+      const batchContent = `@echo off
+:: Set working directory to the script location
+cd /d "%~dp0"
+
+:: Set NODE_PATH to include global modules
+set NODE_PATH=%APPDATA%\\npm\\node_modules
+
+:: Log startup for debugging
+echo %DATE% %TIME% - Service starting > "%~dp0service.log"
+echo Command: ${serviceCommand} >> "%~dp0service.log"
+
+:: Run the node process
+${serviceCommand} >> "%~dp0service.log" 2>&1
+`;
+      
       try {
-        mkdirSync(dirname(batchFilePath), { recursive: true });
-        writeFileSync(batchFilePath, `@echo off\r\n${serviceCommand}`, 'utf8');
+        writeFileSync(batchFilePath, batchContent, 'utf8');
         console.log(`Created batch file at: ${batchFilePath}`);
         
-        // Install using sc.exe (Windows Service Controller)
+        // Install using Windows Service Controller (sc.exe)
         execSync(`sc create ${serviceName} binPath= "${batchFilePath}" start= auto DisplayName= "${serviceDisplayName}"`, { stdio: 'inherit' });
         execSync(`sc description ${serviceName} "${serviceDescription}"`, { stdio: 'inherit' });
+        
+        // Set service configuration to handle delays and recovery
+        execSync(`sc config ${serviceName} type= own`, { stdio: 'inherit' });
+        execSync(`sc failure ${serviceName} reset= 86400 actions= restart/60000/restart/60000/restart/60000`, { stdio: 'inherit' });
+        
         console.log(`Service ${serviceDisplayName} installed successfully.`);
         console.log('Starting service...');
-        execSync(`sc start ${serviceName}`, { stdio: 'inherit' });
-        console.log('Service started successfully.');
+        
+        try {
+          execSync(`sc start ${serviceName}`, { stdio: 'inherit' });
+          console.log('Service started successfully.');
+        } catch (startError) {
+          console.log('Warning: Service created but could not be started automatically.');
+          console.log('You can start it manually from the Services management console.');
+          console.log(`The service "${serviceDisplayName}" will start automatically on system boot.`);
+        }
       } catch (err) {
         console.error('Error creating service files:', err);
         process.exit(1);
       }
-      return;
     }
-    
-    // If nssm is available, use it (it's more feature-rich)
-    console.log('Using NSSM to install service...');
-    execSync(`nssm install ${serviceName} ${serviceCommand}`, { stdio: 'inherit' });
-    execSync(`nssm set ${serviceName} DisplayName "${serviceDisplayName}"`, { stdio: 'inherit' });
-    execSync(`nssm set ${serviceName} Description "${serviceDescription}"`, { stdio: 'inherit' });
-    execSync(`nssm set ${serviceName} Start SERVICE_AUTO_START`, { stdio: 'inherit' });
-    console.log(`Service ${serviceDisplayName} installed successfully.`);
-    console.log('Starting service...');
-    execSync(`nssm start ${serviceName}`, { stdio: 'inherit' });
-    console.log('Service started successfully.');
-    
   } catch (error) {
     console.error('Failed to install Windows service:', error);
     process.exit(1);
