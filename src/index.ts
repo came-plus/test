@@ -20,8 +20,8 @@ function parseArgs(args: string[]): { port: number; bind: string } {
   const port = portArg ? parseInt(portArg.split('=')[1], 10) : 64001;
   const bind = bindArg ? bindArg.split('=')[1] : '0.0.0.0';
 
-  if (isNaN(port)) {
-    throw new Error('Port must be a valid number.');
+  if (isNaN(port) || port < 1 || port > 65535) {
+    throw new Error('Port must be a valid number between 1 and 65535.');
   }
 
   return { port, bind };
